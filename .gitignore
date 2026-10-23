@@ -1,0 +1,6 @@
+.taste-skill/
+*.tar.gz
+*.tar
+fonts.css
+generate-art.mjs
+design-notes.md
