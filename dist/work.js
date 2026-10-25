@@ -4,6 +4,11 @@
   const panels = [...document.querySelectorAll('.work-panel')];
   const tablist = document.querySelector('.project-tabs');
   const fullMotion = () => document.documentElement.dataset.motion === 'full';
+  const compactLayout = matchMedia('(max-width:700px)');
+  const depthControl = document.getElementById('control-depth');
+  const batchControl = document.getElementById('control-inference');
+  let viewAngle = Number(depthControl.value) / 100, batchSize = Number(batchControl.value), stillTime = 1.6;
+  const depthShades = Array.from({length:64},(_,i)=>`hsl(${190+i/63*20} 65% ${30+i/63*55}%)`);
   let current = 0, time = 0, last = 0, raf = 0, visible = false, phrase = 0, depthColor = false;
   let panelAnimation = null;
   const phrases = ['Build something useful', 'How does this work', 'Keep learning every day'];
@@ -27,7 +32,7 @@
   });
   function select(index,animate) {
     const changed=current!==index;
-    current=index;time=0;
+    current=index;time=0;stillTime=1.6;
     panelAnimation?.cancel();
     tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;});
     resize();
@@ -37,16 +42,34 @@
     start();
   }
   document.querySelector('.next-project').addEventListener('click',event=>select((current+1)%4,event.detail>0));
+  const mobileNav = document.createElement('div');
+  mobileNav.className = 'work-mobile-nav';
+  mobileNav.innerHTML = '<button type="button" data-step="-1">← Previous project</button><button type="button" data-step="1">Next project →</button>';
+  bench.append(mobileNav);
+  mobileNav.querySelectorAll('button').forEach(button=>button.addEventListener('click',event=>{
+    select((current+Number(button.dataset.step)+tabs.length)%tabs.length,event.detail>0);
+    tabs[current].focus({preventScroll:true});
+    tablist.scrollIntoView({block:'start',behavior:fullMotion()?'smooth':'instant'});
+  }));
   const status=document.createElement('p');status.className='sr-only';status.setAttribute('aria-live','polite');bench.append(status);
   document.querySelectorAll('.experiment-action').forEach(button=>button.addEventListener('click',()=>{
     time=0;
+    stillTime = stillTime === 1.6 ? 3.2 : 1.6;
     if(current===0){depthColor=!depthColor;button.firstChild.textContent=depthColor?'Depth view':'Color view';status.textContent=depthColor?'Showing color view.':'Showing depth view.';}
     if(current===1)status.textContent='Batch restarted. This is a conceptual comparison, not measured performance.';
     if(current===2){phrase=(phrase+1)%phrases.length;status.textContent='Input: '+phrases[phrase];}
     if(current===3)status.textContent='Illustrating a request from React through Node.js to the data layer.';
     draw();start();
   }));
-  document.querySelectorAll('.experiment-controls input').forEach(input=>input.addEventListener('input',()=>{draw();}));
+  depthControl.addEventListener('input',()=>{
+    viewAngle=Number(depthControl.value)/100;
+    depthControl.setAttribute('aria-valuetext',`${Math.round((viewAngle-.5)*80)} degrees`);draw();
+  });
+  depthControl.setAttribute('aria-valuetext','0 degrees');
+  batchControl.addEventListener('input',()=>{
+    batchSize=Number(batchControl.value);batchControl.setAttribute('aria-valuetext',`${batchSize} tasks`);draw();
+  });
+  batchControl.setAttribute('aria-valuetext',`${batchSize} tasks`);
   // Preserve the real project content; the canvases illustrate concepts rather than inventing results.
   const cloud=[];
   for(let x=-1.6;x<=1.6;x+=.08)for(let z=-1;z<=1;z+=.08)cloud.push([x,.72,z]);
@@ -61,7 +84,7 @@
     const state=states[current],rect=state.canvas.parentElement.getBoundingClientRect();
     if(!rect.width)return;
     state.width=rect.width;state.height=rect.height;
-    const dpr=Math.min(devicePixelRatio||1,1.5);
+    const dpr=Math.min(devicePixelRatio||1,compactLayout.matches?1.25:1.5);
     state.canvas.width=Math.round(rect.width*dpr);state.canvas.height=Math.round(rect.height*dpr);
     state.ctx?.setTransform(dpr,0,0,dpr,0,0);
     if(state.ctx)panels[current].querySelector('.experiment').classList.add('ready');
@@ -72,17 +95,17 @@
   function label(c,text,x,y,size=14,color='#b9cedd',align='left'){c.font=`${size}px Onest,Arial,sans-serif`;c.fillStyle=color;c.textAlign=align;c.fillText(text,x,y);}
   function box(c,x,y,w,h,color){c.fillStyle=color;c.beginPath();c.roundRect(x,y,w,h,5);c.fill();}
   function depth(c,w,h,t){
-    const amount=Number(document.getElementById('control-depth').value)/100;
+    const amount=viewAngle;
     const yaw=-.45+(amount-.5)*1.4+Math.sin(t*.24)*.09;
     const cy=Math.cos(yaw),sy=Math.sin(yaw),tilt=.35;
     const scale=Math.min(w*.25,h*.4);
-    for(let i=0;i<cloud.length;i++){
+    for(let i=0;i<cloud.length;i+=w<500?2:1){
       const [x,y,z]=cloud[i],rx=x*cy+z*sy,rz=-x*sy+z*cy;
       const py=y*Math.cos(tilt)-rz*Math.sin(tilt),pz=y*Math.sin(tilt)+rz*Math.cos(tilt);
       const perspective=4/(4+pz),xx=w*.52+rx*scale*perspective,yy=h*.49+py*scale*perspective;
       const brightness=Math.max(.22,Math.min(1,(1.9-pz)/3));
       c.globalAlpha=.35+brightness*.6;
-      c.fillStyle=depthColor?(y<0?'#8eafbe':z>.9?'#a6c9b1':'#70b8be'):`hsl(${190+brightness*20} 65% ${30+brightness*55}%)`;
+      c.fillStyle=depthColor?(y<0?'#8eafbe':z>.9?'#a6c9b1':'#70b8be'):depthShades[Math.round(brightness*63)];
       const r=1.05+brightness*.6;c.fillRect(xx,yy,r,r);
     }
     c.globalAlpha=1;
@@ -91,19 +114,20 @@
     for(let i=0;i<10;i++){c.fillStyle=`hsl(200 65% ${30+i*6}%)`;c.fillRect(lx+i*8,h-34,6,8);}
   }
   function inference(c,w,h,t){
-    const count=Number(document.getElementById('control-inference').value);
+    const count=batchSize;
     const phase=(t*.22)%1;
     const left=24,right=w-24,area=right-left;
     label(c,'CPU',left,60,26,'#edf4fa');label(c,'One task at a time',left,85,13);
     label(c,'GPU',left,h*.57,26,'#edf4fa');label(c,'Tasks in parallel',left,h*.57+25,13);
     const gap=5,bw=(area-(count-1)*gap)/count;
+    const blockHeight=h<320?30:44, cpuTop=h<320?94:112;
     for(let i=0;i<count;i++){
       const x=left+i*(bw+gap),done=phase>i/count,active=Math.floor(phase*count)===i;
-      box(c,x,112,bw,44,done?'#7bc9df':'#1d3546');
-      if(active)box(c,x,112,bw,44,'#e1f7ff');
+      box(c,x,cpuTop,bw,blockHeight,done?'#7bc9df':'#1d3546');
+      if(active)box(c,x,cpuTop,bw,blockHeight,'#e1f7ff');
       const gpuDone=(phase*4)%1>(i%4)/4;
-      box(c,x,h*.57+50,bw,44,gpuDone?'#7bc9df':'#1d3546');
-      if(i%4===Math.floor((phase*4)%1*4))box(c,x,h*.57+50,bw,44,'#e1f7ff');
+      box(c,x,h*.57+50,bw,blockHeight,gpuDone?'#7bc9df':'#1d3546');
+      if(i%4===Math.floor((phase*4)%1*4))box(c,x,h*.57+50,bw,blockHeight,'#e1f7ff');
     }
     label(c,`${count} illustrative tasks`,left,h-20,13);
     if(w>500)label(c,'Same work. Different execution.',right,h-20,13,'#8eacbf','right');
@@ -111,7 +135,7 @@
   function language(c,w,h,t){
     const words=phrases[phrase].split(' '),top=55;
     const gap=8,tw=(w-48-(words.length-1)*gap)/words.length;
-    words.forEach((word,i)=>{box(c,24+i*(tw+gap),top,tw,42,'#254252');label(c,word,24+i*(tw+gap)+tw/2,top+27,Math.max(13,Math.min(16,w/30)),'#e0f6fc','center');});
+    words.forEach((word,i)=>{box(c,24+i*(tw+gap),top,tw,42,'#254252');c.font=`${Math.max(13,Math.min(16,w/30))}px Onest,Arial,sans-serif`;c.textAlign='center';c.fillStyle='#e0f6fc';c.fillText(word,24+i*(tw+gap)+tw/2,top+27,tw-10);});
     const layers=[words.length,6,6,3],ys=[top+42,h*.43,h*.64,h*.82];
     for(let k=0;k<layers.length-1;k++)for(let i=0;i<layers[k];i++)for(let j=0;j<layers[k+1];j++){
       const x1=24+(w-48)*(i+.5)/layers[k],x2=24+(w-48)*(j+.5)/layers[k+1];
@@ -135,14 +159,14 @@
     line(c,carX,carY+34,carX,y-15,'#36596c');
     for(let i=0;i<3;i++){
       const x=24+i*(nodeWidth+gap);box(c,x,y,nodeWidth,64,'#1e384a');
-      label(c,names[i],x+nodeWidth/2,y+27,Math.min(20,w/22),'#e8f6fc','center');label(c,subs[i],x+nodeWidth/2,y+47,12,'#a0bfce','center');
+      label(c,names[i],x+nodeWidth/2,y+27,Math.max(14,Math.min(20,w/22)),'#e8f6fc','center');label(c,subs[i],x+nodeWidth/2,y+47,13,'#a0bfce','center');
       if(i<2)line(c,x+nodeWidth,y+32,x+nodeWidth+gap,y+32,'#6093a8',2);
     }
     const p=(t*.27)%1,xx=24+(w-48)*p;
     dot(c,xx,y-12,5,'#cbf5ff');
     label(c,['Choose a vehicle','Send to the backend','Return the response'][Math.min(2,Math.floor(p*3))],w/2,h-18,13,'#b9cedd','center');
   }
-  function draw(){const s=states[current];if(!s.ctx)return;s.ctx.clearRect(0,0,s.width,s.height);[depth,inference,language,rental][current](s.ctx,s.width,s.height,fullMotion()?time:1.6);}
+  function draw(){const s=states[current];if(!s.ctx)return;s.ctx.clearRect(0,0,s.width,s.height);[depth,inference,language,rental][current](s.ctx,s.width,s.height,fullMotion()?time:stillTime);}
   function tick(now){raf=0;if(document.hidden||!visible||!fullMotion())return;if(now-last>=30){time+=Math.min(now-last,60)/1000;last=now;draw();}raf=requestAnimationFrame(tick);}
   function start(){cancelAnimationFrame(raf);raf=0;draw();if(visible&&!document.hidden&&fullMotion()){last=performance.now();raf=requestAnimationFrame(tick);}}
   new ResizeObserver(resize).observe(document.querySelector('.work-panels'));

@@ -108,6 +108,8 @@
   function tick(now) {
     frame = 0;
     if (mode === 'off' || document.hidden || !context) return;
+    const interval = mode === 'calm' ? 50 : (finePointer.matches ? 0 : 32);
+    if (now - previous < interval) { frame = requestAnimationFrame(tick); return; }
     const dt = Math.min(now - previous, 50); previous = now;
     time += dt * .001;
     const easing = 1 - Math.exp(-dt / 180);
