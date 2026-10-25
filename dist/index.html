@@ -8,7 +8,7 @@
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preload" href="assets/unbounded.ttf" as="font" type="font/ttf" crossorigin>
   <link rel="preload" href="assets/onest.ttf" as="font" type="font/ttf" crossorigin>
-  <link rel="stylesheet" href="style.css"><script src="app.js" defer></script>
+  <link rel="stylesheet" href="style.css"><script src="app.js" defer></script><script src="neural.js" defer></script>
 </head>
 <body>
   <div class="ambient" aria-hidden="true"><div class="ambient-light"></div><canvas id="cloud"></canvas></div>
@@ -23,7 +23,7 @@
       <h1 class="monument">RAZA</h1>
       <div class="hero-bottom">
         <div class="hero-copy"><p class="lead">Computer science student.<br>Learning by building.</p><p>I’m Syed Muhammad Mehdi Raza, a computer science student at the University of Calgary. I build AI experiments and full-stack applications.</p><div class="hero-actions"><a class="button" href="#projects">Explore my projects <span aria-hidden="true">↗</span></a><a class="text-link" href="#contact">Let’s connect</a></div></div>
-        <aside class="internship"><h2>Open to internships</h2><p>Looking for a team where I can contribute, ask good questions, and grow as a developer.</p><span>Software engineering &amp; AI / ML</span><button id="motion-toggle" type="button" aria-pressed="false">Pause background motion</button></aside>
+        <aside class="internship"><h2>Open to internships</h2><p>Looking for a team where I can contribute, ask good questions, and grow as a developer.</p><span>Software engineering &amp; AI / ML</span><div class="motion-controls" role="group" aria-label="Background animation"><button type="button" data-motion-mode="full" aria-pressed="false">Full motion</button><button type="button" data-motion-mode="calm" aria-pressed="false">Calm</button><button type="button" data-motion-mode="off" aria-pressed="false">Off</button></div></aside>
       </div>
     </section>
     <section class="projects wrap" id="projects" aria-labelledby="projects-title">
