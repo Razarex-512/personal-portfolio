@@ -11,7 +11,7 @@
   const depthShades = Array.from({length:64},(_,i)=>`hsl(${190+i/63*20} 65% ${30+i/63*55}%)`);
   let current = 0, time = 0, last = 0, raf = 0, visible = false, phrase = 0, depthColor = false;
   let panelAnimation = null;
-  const phrases = ['Build something useful', 'How does this work', 'Keep learning every day'];
+  const phrases = ['library?', 'parking?', 'tuition?'];
   const states = panels.map(panel => ({canvas:panel.querySelector('canvas'),ctx:panel.querySelector('canvas').getContext('2d'),width:1,height:1}));
   const easing = 'cubic-bezier(.23,1,.32,1)';
   bench.classList.add('enhanced');
@@ -133,10 +133,10 @@
     if(w>500)label(c,'Same work. Different execution.',right,h-20,13,'#8eacbf','right');
   }
   function language(c,w,h,t){
-    const words=phrases[phrase].split(' '),top=55;
+    const words=[...phrases[phrase]],top=55;
     const gap=8,tw=(w-48-(words.length-1)*gap)/words.length;
     words.forEach((word,i)=>{box(c,24+i*(tw+gap),top,tw,42,'#254252');c.font=`${Math.max(13,Math.min(16,w/30))}px Onest,Arial,sans-serif`;c.textAlign='center';c.fillStyle='#e0f6fc';c.fillText(word,24+i*(tw+gap)+tw/2,top+27,tw-10);});
-    const layers=[words.length,6,6,3],ys=[top+42,h*.43,h*.64,h*.82];
+    const layers=[words.length,4,4,1],ys=[top+42,h*.43,h*.64,h*.82];
     for(let k=0;k<layers.length-1;k++)for(let i=0;i<layers[k];i++)for(let j=0;j<layers[k+1];j++){
       const x1=24+(w-48)*(i+.5)/layers[k],x2=24+(w-48)*(j+.5)/layers[k+1];
       line(c,x1,ys[k],x2,ys[k+1],'#264858');
@@ -145,7 +145,7 @@
     for(let k=1;k<layers.length;k++)for(let i=0;i<layers[k];i++){
       const x=24+(w-48)*(i+.5)/layers[k];dot(c,x,ys[k],9,'#234656');dot(c,x,ys[k],3.8+Math.sin(t*2+i)*1.2,'#a2dfeb');
     }
-    label(c,'Input → representation → response',w/2,h-15,13,'#b9cedd','center');
+    label(c,'Characters → decoder → next token',w/2,h-15,13,'#b9cedd','center');
   }
   function rental(c,w,h,t){
     const names=['React','Node.js','Data'],subs=['Interface','Request','Response'];

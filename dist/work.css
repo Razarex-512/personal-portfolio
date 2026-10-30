@@ -38,3 +38,4 @@ html[data-motion=off] *,html[data-motion=off] *::before,html[data-motion=off] *:
 .internship{padding-top:0;align-self:start}
 .footer-name{font-size:36px;line-height:1.1;text-transform:lowercase;letter-spacing:-.07em}
 @media(max-width:650px){.hero{padding:44px 0 64px}.hero-title{font-size:clamp(38px,10.8vw,60px)}.hero-bottom{margin-top:32px;gap:36px}.footer-name{font-size:28px}}
+.project-source{display:inline-flex;align-items:center;min-height:44px;margin-top:14px;color:var(--accent)}
