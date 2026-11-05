@@ -1,6 +1,6 @@
 # Raza — Personal Portfolio
 
-A project-focused portfolio for Syed Muhammad Mehdi Raza, a computer science student building software, AI, and machine-learning projects.
+A project-focused portfolio for myself.
 
 **Live site:** [razabuilds.dev](https://www.razabuilds.dev/)
 
@@ -44,7 +44,7 @@ Then open the local address printed in the terminal.
 
 ## Design goals
 
-The site uses a dark, technical visual language without losing clarity. Its motion and interactive diagrams reinforce the computer-science theme while reduced-motion options keep the experience comfortable and accessible.
+The site uses a dark, technical visual language. Its motion and interactive diagrams are interactive and reduced-motion options keep the experience comfortable and accessible.
 
 ## Author
 
