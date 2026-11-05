@@ -9,6 +9,7 @@ A project-focused portfolio for myself.
 - A responsive, accessible portfolio built with semantic HTML, CSS, and vanilla JavaScript
 - A dynamic neural-network-inspired background and interactive project visualizations
 - Motion controls with full, calm, and off modes
+- Full-motion cursor choreography: scroll-triggered assembly and an idle pointer swarm
 - Project storytelling designed for internship applications
 - Mobile layouts and touch-friendly interactions
 
@@ -31,6 +32,8 @@ dist/
   work.css          Earlier project styles, retained for reference
   app.js            Page interactions
   neural.js         Animated network background
+  builders.js       Cursor choreography and section assembly
+  builders.css      Decorative cursors and construction outlines
   work.js           Interactive project demonstrations
   assets/           Fonts, icons, and project illustrations
 ```
