@@ -15,50 +15,20 @@
   const states = panels.map(panel => ({canvas:panel.querySelector('canvas'),ctx:panel.querySelector('canvas').getContext('2d'),width:1,height:1}));
   const easing = 'cubic-bezier(.23,1,.32,1)';
   bench.classList.add('enhanced');
-  tablist.setAttribute('role','tablist'); tablist.setAttribute('aria-orientation','vertical');
-  tabs.forEach((tab,index) => {
-    tab.setAttribute('role','tab');
-    panels[index].setAttribute('role','tabpanel'); panels[index].tabIndex = 0;
-    tab.addEventListener('click',event => select(index,event.detail>0));
-    tab.addEventListener('keydown',event => {
-      let next;
-      if (['ArrowDown','ArrowRight'].includes(event.key)) next=(index+1)%tabs.length;
-      if (['ArrowUp','ArrowLeft'].includes(event.key)) next=(index+tabs.length-1)%tabs.length;
-      if (event.key==='Home') next=0;
-      if (event.key==='End') next=tabs.length-1;
-      if (next===undefined) return;
-      event.preventDefault(); select(next,false); tabs[next].focus();
-    });
-  });
-  function select(index,animate) {
-    const changed=current!==index;
+  function select(index,scrollTo) {
     current=index;time=0;stillTime=1.6;
-    panelAnimation?.cancel();
-    tabs.forEach((tab,i)=>{tab.setAttribute('aria-selected',String(i===index));tab.tabIndex=i===index?0:-1;panels[i].hidden=i!==index;});
-    resize();
-    if(changed&&animate&&document.documentElement.dataset.motion!=='off') {
-      panelAnimation=panels[index].animate([{opacity:.25,transform:fullMotion()?'translateY(12px)':'none'},{opacity:1,transform:'none'}],{duration:250,easing});
-    }
-    start();
+    tabs.forEach((tab,i)=>{tab.setAttribute('aria-current',String(i===index));tab.tabIndex=0;});
+    if(scrollTo)panels[index].scrollIntoView({block:'start',behavior:fullMotion()?'smooth':'instant'});
+    resize();start();
   }
-  document.querySelector('.next-project').addEventListener('click',event=>select((current+1)%4,event.detail>0));
-  const mobileNav = document.createElement('div');
-  mobileNav.className = 'work-mobile-nav';
-  mobileNav.innerHTML = '<button type="button" data-step="-1">← Previous project</button><button type="button" data-step="1">Next project →</button>';
-  bench.append(mobileNav);
-  mobileNav.querySelectorAll('button').forEach(button=>button.addEventListener('click',event=>{
-    select((current+Number(button.dataset.step)+tabs.length)%tabs.length,event.detail>0);
-    tabs[current].focus({preventScroll:true});
-    tablist.scrollIntoView({block:'start',behavior:fullMotion()?'smooth':'instant'});
-  }));
+  tabs.forEach((tab,index)=>tab.addEventListener('click',()=>select(index,true)));
   const status=document.createElement('p');status.className='sr-only';status.setAttribute('aria-live','polite');bench.append(status);
-  document.querySelectorAll('.experiment-action').forEach(button=>button.addEventListener('click',()=>{
-    time=0;
-    stillTime = stillTime === 1.6 ? 3.2 : 1.6;
-    if(current===0){depthColor=!depthColor;button.firstChild.textContent=depthColor?'Depth view':'Color view';status.textContent=depthColor?'Showing color view.':'Showing depth view.';}
-    if(current===1)status.textContent='Batch restarted. This is a conceptual comparison, not measured performance.';
-    if(current===2){phrase=(phrase+1)%phrases.length;status.textContent='Input: '+phrases[phrase];}
-    if(current===3)status.textContent='Illustrating a request from React through Node.js to the data layer.';
+  document.querySelectorAll('.experiment-action').forEach((button,index)=>button.addEventListener('click',()=>{
+    current=index;time=0;stillTime=stillTime===1.6?3.2:1.6;
+    if(index===0){depthColor=!depthColor;button.firstChild.textContent=depthColor?'Depth view':'Color view';status.textContent=depthColor?'Showing color view.':'Showing depth view.';}
+    if(index===1)status.textContent='Batch restarted. Conceptual comparison, not measured performance.';
+    if(index===2){phrase=(phrase+1)%phrases.length;status.textContent='Input: '+phrases[phrase];}
+    if(index===3)status.textContent='Illustrating a request from React through Node.js to the data layer.';
     draw();start();
   }));
   depthControl.addEventListener('input',()=>{
@@ -81,13 +51,15 @@
     for(let y=.72-tall;y<.72;y+=.065)for(let n=-size/2;n<size/2;n+=.065){cloud.push([bx+n,y,bz-size/2]);cloud.push([bx+size/2,y,bz+n]);}
   }
   function resize(){
-    const state=states[current],rect=state.canvas.parentElement.getBoundingClientRect();
+    states.forEach((state,index)=>{
+    const rect=state.canvas.parentElement.getBoundingClientRect();
     if(!rect.width)return;
     state.width=rect.width;state.height=rect.height;
     const dpr=Math.min(devicePixelRatio||1,compactLayout.matches?1.25:1.5);
     state.canvas.width=Math.round(rect.width*dpr);state.canvas.height=Math.round(rect.height*dpr);
     state.ctx?.setTransform(dpr,0,0,dpr,0,0);
-    if(state.ctx)panels[current].querySelector('.experiment').classList.add('ready');
+    if(state.ctx)panels[index].querySelector('.experiment').classList.add('ready');
+    });
     draw();
   }
   function line(c,x1,y1,x2,y2,color='#35596e',width=1){c.strokeStyle=color;c.lineWidth=width;c.beginPath();c.moveTo(x1,y1);c.lineTo(x2,y2);c.stroke();}
@@ -166,11 +138,13 @@
     dot(c,xx,y-12,5,'#cbf5ff');
     label(c,['Choose a vehicle','Send to the backend','Return the response'][Math.min(2,Math.floor(p*3))],w/2,h-18,13,'#b9cedd','center');
   }
-  function draw(){const s=states[current];if(!s.ctx)return;s.ctx.clearRect(0,0,s.width,s.height);[depth,inference,language,rental][current](s.ctx,s.width,s.height,fullMotion()?time:stillTime);}
-  function tick(now){raf=0;if(document.hidden||!visible||!fullMotion())return;if(now-last>=30){time+=Math.min(now-last,60)/1000;last=now;draw();}raf=requestAnimationFrame(tick);}
+  function draw(activeOnly=false){states.forEach((s,i)=>{if(!s.ctx||(activeOnly&&i!==current))return;s.ctx.clearRect(0,0,s.width,s.height);[depth,inference,language,rental][i](s.ctx,s.width,s.height,fullMotion()&&i===current?time:stillTime);});}
+  function tick(now){raf=0;if(document.hidden||!visible||!fullMotion())return;if(now-last>=30){time+=Math.min(now-last,60)/1000;last=now;draw(true);}raf=requestAnimationFrame(tick);}
   function start(){cancelAnimationFrame(raf);raf=0;draw();if(visible&&!document.hidden&&fullMotion()){last=performance.now();raf=requestAnimationFrame(tick);}}
   new ResizeObserver(resize).observe(document.querySelector('.work-panels'));
-  new IntersectionObserver(entries=>{visible=entries[0].isIntersecting;start();},{threshold:0}).observe(document.querySelector('.work-panels'));
+  const visiblePanels=new Set();
+  const panelObserver=new IntersectionObserver(entries=>{entries.forEach(entry=>{const i=panels.indexOf(entry.target);if(entry.isIntersecting)visiblePanels.add(i);else visiblePanels.delete(i);});visible=visiblePanels.size>0;if(visible)current=[...visiblePanels].sort((a,b)=>Math.abs(panels[a].getBoundingClientRect().top-150)-Math.abs(panels[b].getBoundingClientRect().top-150))[0];tabs.forEach((tab,i)=>tab.setAttribute('aria-current',String(i===current)));start();},{threshold:.12});
+  panels.forEach(panel=>panelObserver.observe(panel));
   new MutationObserver(start).observe(document.documentElement,{attributes:true,attributeFilter:['data-motion']});
   document.addEventListener('visibilitychange',start);
   const toolkit=document.querySelector('.toolkit p');

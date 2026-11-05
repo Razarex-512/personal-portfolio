@@ -19,13 +19,16 @@ A project-focused portfolio for Syed Muhammad Mehdi Raza, a computer science stu
 - A decoder-only transformer built from scratch in PyTorch
 - A full-stack car-rental application
 
+- Bias and fairness evaluation across Phi-2, StableLM-3B, and TinyLlama
+
 ## Project structure
 
 ```text
 dist/
   index.html        Page structure and portfolio content
-  style.css         Global layout and visual system
-  work.css          Project-section styles
+  cinematic.css     Responsive visual system and project layouts
+  style.css         Earlier visual system, retained for reference
+  work.css          Earlier project styles, retained for reference
   app.js            Page interactions
   neural.js         Animated network background
   work.js           Interactive project demonstrations

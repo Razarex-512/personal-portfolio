@@ -7,7 +7,7 @@
   let explicitMode = null;
   try { explicitMode = localStorage.getItem('raza-neural-motion'); } catch {}
   if (!['full', 'calm', 'off'].includes(explicitMode)) explicitMode = null;
-  let mode = explicitMode || (preference.matches ? 'calm' : 'full');
+  let mode = explicitMode || (preference.matches ? 'off' : 'full');
   let width = 1, height = 1, range = 1, targetScroll = 0, scroll = 0;
   let mouseX = 0, mouseY = 0, targetX = 0, targetY = 0;
   let time = 0, frame = 0, previous = 0;
@@ -56,13 +56,13 @@
       const [a, b] = list[i], start = projected[a], end = projected[b];
       const glow = mode === 'off' ? .8 : .66 + .34 * Math.sin(time * 1.4 - i * .18);
       context.globalAlpha = Math.min(start.alpha, end.alpha) * weight * (.28 + glow * .3);
-      context.strokeStyle = i % 5 === 0 ? '#60a5fa' : '#80dae7';
+      context.strokeStyle = i % 5 === 0 ? '#9b4558' : '#ae6a76';
       context.beginPath(); context.moveTo(start.x, start.y); context.lineTo(end.x, end.y); context.stroke();
       if (pulses && mode === 'full' && i % 13 === 0) {
         const position = (time * .38 + i * .071) % 1;
         const x = mix(start.x, end.x, position), y = mix(start.y, end.y, position);
         context.globalAlpha = Math.min(start.alpha, end.alpha) * weight * .9;
-        context.fillStyle = '#d0faff'; context.beginPath(); context.arc(x, y, 2.5, 0, Math.PI * 2); context.fill();
+        context.fillStyle = '#f3b9c2'; context.beginPath(); context.arc(x, y, 2.5, 0, Math.PI * 2); context.fill();
       }
     }
   }
@@ -99,16 +99,16 @@
       const node = projected[i];
       const activation = mode === 'off' ? .55 : .45 + .55 * Math.pow((1 + Math.sin(time * 1.8 - i * .55)) / 2, 3);
       context.globalAlpha = node.alpha * (.25 + activation * .35);
-      context.fillStyle = '#55bddd'; context.beginPath(); context.arc(node.x, node.y, (5 + activation * 3) * node.scale, 0, Math.PI * 2); context.fill();
+      context.fillStyle = '#98374e'; context.beginPath(); context.arc(node.x, node.y, (5 + activation * 3) * node.scale, 0, Math.PI * 2); context.fill();
       context.globalAlpha = node.alpha * (.55 + activation * .45);
-      context.fillStyle = '#b0f1fa'; context.beginPath(); context.arc(node.x, node.y, (1.7 + activation * .9) * node.scale, 0, Math.PI * 2); context.fill();
+      context.fillStyle = '#e6a6b6'; context.beginPath(); context.arc(node.x, node.y, (1.7 + activation * .9) * node.scale, 0, Math.PI * 2); context.fill();
     }
     context.globalAlpha = 1;
   }
   function tick(now) {
     frame = 0;
     if (mode === 'off' || document.hidden || !context) return;
-    const interval = mode === 'calm' ? 50 : (finePointer.matches ? 0 : 32);
+    const interval = mode === 'calm' ? 100 : 32;
     if (now - previous < interval) { frame = requestAnimationFrame(tick); return; }
     const dt = Math.min(now - previous, 50); previous = now;
     time += dt * .001;
@@ -129,7 +129,7 @@
     try { localStorage.setItem('raza-neural-motion', mode); } catch {}
     sync();
   }));
-  preference.addEventListener('change', () => { if (!explicitMode) { mode = preference.matches ? 'calm' : 'full'; sync(); } });
+  preference.addEventListener('change', () => { if (!explicitMode) { mode = preference.matches ? 'off' : 'full'; sync(); } });
   addEventListener('resize', resize, { passive: true });
   addEventListener('scroll', () => { targetScroll = Math.max(0, Math.min(1, scrollY / range)); }, { passive: true });
   if (finePointer.matches) {
