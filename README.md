@@ -30,8 +30,6 @@ dist/
   neural.js         Animated network background
   work.js           Interactive project demonstrations
   assets/           Fonts, icons, and project illustrations
-.openai/
-  hosting.json      Static hosting configuration
 ```
 
 ## Run locally
