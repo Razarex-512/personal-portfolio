@@ -139,6 +139,8 @@
       worker.node.style.transform = `translate3d(${worker.x.toFixed(2)}px,${worker.y.toFixed(2)}px,0)`;
       worker.node.style.opacity = String(opacity);
       worker.node.dataset.building = String(!!job && !keyboard);
+      worker.node.dataset.labelLeft = String(worker.x > width - 100);
+      worker.node.dataset.labelUp = String(worker.y > height - 64);
       if (opacity) visibleCount++;
     });
     // No invisible busy loop on phones, with keyboard navigation, or after pointer exit.

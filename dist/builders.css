@@ -8,6 +8,8 @@ body{overflow-x:clip}
 .builder-label{position:absolute;top:24px;left:15px;padding:2px 7px;background:currentColor;white-space:nowrap;opacity:0;transform:translateY(-3px);transition:opacity 180ms ease,transform 180ms var(--ease-out)}
 .builder-label span{color:#0c0c0e;font:500 11px/1.6 Onest,sans-serif;letter-spacing:.01em}
 .builder-cursor[data-building=true] .builder-label{opacity:1;transform:none}
+.builder-cursor[data-label-left=true] .builder-label{left:auto;right:8px}
+.builder-cursor[data-label-up=true] .builder-label{top:auto;bottom:6px}
 .build-frame{position:absolute;left:0;top:0;border:1px solid #ee778570;transform-origin:0 0;pointer-events:none}
 .build-frame i{position:absolute;width:6px;height:6px;background:#0c0c0e;border:1px solid #ee7785}
 .build-frame i:nth-child(1){left:-3px;top:-3px}.build-frame i:nth-child(2){right:-3px;top:-3px}.build-frame i:nth-child(3){left:-3px;bottom:-3px}.build-frame i:nth-child(4){right:-3px;bottom:-3px}
