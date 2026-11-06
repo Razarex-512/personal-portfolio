@@ -4,6 +4,8 @@
 .builder-cursor{position:absolute;left:0;top:0;width:22px;height:28px;opacity:0;will-change:transform;transition:opacity 180ms ease;color:#ee7785}
 body{overflow-x:clip}
 .builder-cursor svg{display:block;width:22px;height:28px;overflow:visible}
+.builder-cursor[data-role=write] svg{width:19px;height:25px}
+.writer-caret{position:absolute;left:0;top:0;width:2px;height:20px;background:#f1b4bd;transform-origin:0 0}
 .builder-cursor path{fill:currentColor;stroke:#0c0c0e;stroke-width:1.5;stroke-linejoin:round}
 .builder-label{position:absolute;top:24px;left:15px;padding:2px 7px;background:currentColor;white-space:nowrap;opacity:0;transform:translateY(-3px);transition:opacity 180ms ease,transform 180ms var(--ease-out)}
 .builder-label span{color:#0c0c0e;font:500 11px/1.6 Onest,sans-serif;letter-spacing:.01em}

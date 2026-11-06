@@ -9,7 +9,7 @@ A project-focused portfolio for myself.
 - A responsive, accessible portfolio built with semantic HTML, CSS, and vanilla JavaScript
 - A dynamic neural-network-inspired background and interactive project visualizations
 - Motion controls with full, calm, and off modes
-- Full-motion cursor choreography: scroll-triggered assembly and an idle pointer swarm
+- Full-motion cursor choreography: six builders, six phrase writers, and an idle pointer swarm; four cursors on compact layouts
 - Project storytelling designed for internship applications
 - Mobile layouts and touch-friendly interactions
 
