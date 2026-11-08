@@ -91,7 +91,6 @@
   const studyAttribute=document.querySelector('#study-attribute');
   studyAttribute?.addEventListener('change',()=>{
     document.querySelector('.study-variable').textContent=studyAttribute.value+' varied';
-    document.querySelector('.study-feedback').textContent=studyAttribute.value+' changes; the symptoms and prompt stay fixed.';
   });
   // Preserve the real project content; the canvases illustrate concepts rather than inventing results.
   const cloud=[];
