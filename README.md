@@ -11,6 +11,8 @@ A project-focused portfolio for myself.
 - Motion controls with full, calm, and off modes
 - Full-motion cursor choreography: six builders, six phrase writers, and an idle pointer swarm; four cursors on compact layouts
 - Project storytelling designed for internship applications
+- A five-project viewer with keyboard navigation, direct project links, and selection that stays in sync with the displayed project
+- A one-time cursor assembly for the PROJECTS heading and interactive illustrations matched to the site's palette
 - Mobile layouts and touch-friendly interactions
 
 ## Featured projects
@@ -19,7 +21,6 @@ A project-focused portfolio for myself.
 - ML inference systems
 - A decoder-only transformer built from scratch in PyTorch
 - A full-stack car-rental application
-
 - Bias and fairness evaluation across Phi-2, StableLM-3B, and TinyLlama
 
 ## Project structure
@@ -34,7 +35,8 @@ dist/
   neural.js         Animated network background
   builders.js       Cursor choreography and section assembly
   builders.css      Decorative cursors and construction outlines
-  work.js           Interactive project demonstrations
+  work.js           Project selection and interactive demonstrations
+  viewer.css        Single-project viewer and responsive selector
   assets/           Fonts, icons, and project illustrations
 ```
 

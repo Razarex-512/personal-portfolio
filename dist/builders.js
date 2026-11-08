@@ -8,13 +8,13 @@
   layer.hidden = true;
   document.body.append(layer);
   const buildSelector = [
-    '.hero-title > span', '.work-heading h2', '.experiment', '.work-story h3',
+    '.hero-title > span', '.project-word', '.experiment', '.work-story h3',
     '.work-facts dl', '.fairness-header h3', '.study-diagram', '.study-copy h4',
     '.about h2', '.research h3', '.toolkit h3', '.contact h2', '.email', '.footer-name'
   ].join(',');
   const writeSelector = [
-    '.hero-copy > p', '.work-heading p', '.work-intro', '.work-facts > p',
-    '.fairness-header > div > p', '.study-copy p', '.about-intro',
+    '.hero-copy > p', '.work-heading p', '.work-intro',
+    '.fairness-header > div > p', '.about-intro',
     '.about-grid > div:nth-child(2) > p', '.research p', '.toolkit p', '.contact-row > p'
   ].join(',');
   const pieces = [...document.querySelectorAll(buildSelector + ',' + writeSelector)];
@@ -32,6 +32,7 @@
     return {node, role:i < 6 ? 'build' : 'write', assignments:0, x:innerWidth * .8 + i * 10, y:70 + i * 16, vx:0, vy:0, job:null, corner:0};
   });
   let active = false, raf = 0, previous = 0, keyboard = false;
+  let titlePlayed = false;
   let width = root.clientWidth, height = innerHeight, pending = [], jobs = [];
   const compact = () => width < 768 || !finePointer.matches;
   const included = i => !compact() || i === 0 || i === 1 || i === 6 || i === 7;
@@ -59,6 +60,8 @@
   }
 
   function build(el, now) {
+    if(el.closest('.work-panel')?.hidden||!el.getClientRects().length)return true;
+    if(el.matches('.project-word'))return assembleTitle(el,now);
     const role = writingPieces.has(el) ? 'write' : 'build';
     const limit = compact() ? 1 : 3;
     if (jobs.filter(job => job.kind === role).length >= limit) return false;
@@ -92,6 +95,24 @@
     const job = {kind:'build', el, frame, animations:[animation], start:now, end:now + 1450, rect, width:rect.width + 12, height:rect.height + 12};
     workers.forEach((worker, i) => {worker.job = job; worker.corner = i; worker.assignments++;});
     jobs.push(job);
+    return true;
+  }
+
+  function assembleTitle(el, now) {
+    if(titlePlayed){seen.add(el);return true;}
+    const rect=el.getBoundingClientRect();
+    if(rect.bottom<0||rect.top>height)return true;
+    const workers=crew.filter((worker,i)=>!worker.job&&included(i)).slice(0,compact()?4:8);
+    if(!workers.length)return false;
+    const letters=[...el.querySelectorAll('.project-letter')];
+    const offsets=[-22,16,-10,24,-18,12,-24,18];
+    const animations=letters.map((letter,i)=>letter.animate([
+      {opacity:.6,transform:`translate(${(i%2?1:-1)*(compact()?3:8)}px,${offsets[i]*(compact()?.5:1)}px) rotate(${i%2?3:-3}deg)`},
+      {opacity:1,transform:'translate(0,0) rotate(0deg)'}
+    ],{duration:700,delay:150+i*35,fill:'backwards',easing:ease}));
+    const job={kind:'letters',el,rect,letters,letterRects:[],animations,start:now,end:now+1200};
+    workers.forEach((worker,i)=>{worker.job=job;worker.corner=Math.floor(i*letters.length/workers.length);worker.assignments++;});
+    jobs.push(job);seen.add(el);titlePlayed=true;
     return true;
   }
 
@@ -162,7 +183,7 @@
       pending = pending.filter(el => !seen.has(el) && !build(el, now));
     }
     // Batch layout reads before writes. Only actively assembling pieces are measured.
-    jobs.forEach(job => {job.rect = job.el.getBoundingClientRect();});
+    jobs.forEach(job => {job.rect = job.el.getBoundingClientRect();if(job.kind==='letters')job.letterRects=job.letters.map(letter=>letter.getBoundingClientRect());});
     jobs = jobs.filter(job => {
       if (job.rect.bottom < -80 || job.rect.top > height + 80) {finish(job); return false;}
       return true;
@@ -171,7 +192,7 @@
       if (job.kind === 'build') {
         job.frame.style.transform = `translate3d(${job.rect.left - 6}px,${job.rect.top - 6}px,0) scale(${(job.rect.width + 12) / job.width},${(job.rect.height + 12) / job.height})`;
         job.frame.style.opacity = String(clamp((job.end - now) / 400, 0, .8));
-      } else {
+      } else if(job.kind==='write') {
         const elapsed = now - job.start;
         const chunk = job.chunks.findLast(part => elapsed >= part.at + 80);
         job.penX = job.rect.left + (chunk?.x || 0);
@@ -189,8 +210,9 @@
       let x, y, opacity = 0;
       if (job && !keyboard) {
         const r = job.rect;
-        x = job.kind === 'write' ? job.penX + 8 : worker.corner ? r.right + 6 : r.left - 6;
-        y = job.kind === 'write' ? job.penY + 24 : worker.corner ? r.bottom + 6 : r.top - 6;
+        const letter=job.kind==='letters'?job.letterRects[worker.corner]:null;
+        x = letter ? letter.right-5 : job.kind === 'write' ? job.penX + 8 : worker.corner ? r.right + 6 : r.left - 6;
+        y = letter ? letter.bottom-8 : job.kind === 'write' ? job.penY + 24 : worker.corner ? r.bottom + 6 : r.top - 6;
         opacity = .95;
       } else if (following && !keyboard) {
         // Irregular orbits breathe around the idle pointer, then stretch into a trailing flock.
@@ -209,13 +231,14 @@
       worker.vx += ((x - worker.x) * 100 - worker.vx * 10) * dt;
       worker.vy += ((y - worker.y) * 100 - worker.vy * 10) * dt;
       worker.x += worker.vx * dt; worker.y += worker.vy * dt;
-      if (job?.kind === 'build' && now - job.start > 250) {
+      if ((job?.kind === 'build'||job?.kind==='letters') && now - job.start > 250) {
         // Once gripped, the cursor and the element travel as one object.
         worker.x = x; worker.y = y; worker.vx = 0; worker.vy = 0;
       }
       worker.node.style.transform = `translate3d(${worker.x.toFixed(2)}px,${worker.y.toFixed(2)}px,0)`;
       worker.node.style.opacity = String(opacity);
       flag(worker.node, 'building', !!job && !keyboard);
+      flag(worker.node, 'letter', job?.kind==='letters');
       flag(worker.node, 'labelLeft', worker.x > width - 100);
       flag(worker.node, 'labelUp', worker.y > height - 64);
       if (opacity) visibleCount++;
@@ -234,6 +257,26 @@
     wake();
   }, {threshold:.08, rootMargin:'0px 0px -4% 0px'});
   pieces.forEach(el => observer.observe(el));
+
+  document.addEventListener('project:beforechange',event=>{
+    const panel=event.detail.panel;
+    jobs=jobs.filter(job=>{if(panel.contains(job.el)){finish(job);return false;}return true;});
+    pending=pending.filter(el=>!panel.contains(el));
+  });
+  document.addEventListener('project:change',event=>{
+    const {panel,animate}=event.detail;
+    const members=pieces.filter(el=>panel.contains(el));
+    members.forEach(el=>seen.add(el));
+    if(active&&animate){
+      keyboard=false;
+      members.filter(el=>el.matches('.experiment,.study-diagram,.work-intro')).forEach(el=>{
+        seen.delete(el);
+        const rect=el.getBoundingClientRect();
+        if(rect.top<height&&rect.bottom>0&&!pending.includes(el))pending.push(el);
+      });
+      wake();
+    }
+  });
 
   function sync() {
     // neural.js defaults to Off for reduced motion; an explicit Full selection opts in.
